@@ -1,13 +1,12 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
-// const dotenv = require("dotenv");
-// dotenv.config();
+const cors = require("cors");
 
 const { env } = require("./src/config/env");
-const { coneectDatabase } = require("./src/db/db");
+const { connectDatabase } = require("./src/db/db");
 
-const userRoute = require("./src/routes/userRoute");
-const adminRoute = require("./src/routes/adminRoutes");
+const userRoutes = require("./src/routes/userRoutes");
+const adminRoutes = require("./src/routes/adminRoutes");
 
 const app = express();
 
@@ -15,23 +14,34 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.use("/api/v1/auth", userRoute);
-app.use("/api/v1/admin", adminRoute);
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    credentials: true,
+  }),
+);
+
+app.use("/api/v1/user", userRoutes);
+app.use("/api/v1/admin", adminRoutes);
 
 app.get("/", (req, res) => {
-  res.status(200).json({ message: "Server is wroking" });
+  res.status(200).json({
+    message: "Server working",
+  });
 });
 
-const server = async () => {
+const startServer = async () => {
   try {
-    await coneectDatabase();
-    
+    await connectDatabase();
+
     app.listen(env.PORT, () => {
-      console.log(`Server is working ${env.PORT}`);
+      console.log(`Server is working: ${env.PORT}`);
     });
   } catch (error) {
-    console.error("Error: ", error);
+    console.error("Database connection failed:", error.message);
     process.exit(1);
   }
 };
-server()
+
+startServer();
